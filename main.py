@@ -10,6 +10,8 @@ x_test = x_test.reshape((10000, 28 * 28)) / 255.0
 
 model = tf.keras.models.Sequential()  # Sequential model
 
+DICT = {}
+
 def StackingLayers():
     model.add(tf.keras.layers.Dense(128, activation='relu', input_shape=(28*28,)))
     model.add(tf.keras.layers.Dense(64, activation='relu'))
@@ -33,15 +35,21 @@ def ModelFit(epc):
     print("epc: ", epc)
     model.fit(x_train, y_train, epochs=epc, verbose=1, validation_split=0.2)    #epochs변경, verbose가 0이면 깔끔하게 출력, 1이면 쪼금 자세히
 
-def PrintAccuracy():
+def PrintAccuracy(opt, lr, epc):
     test_loss, test_acc = model.evaluate(x_test, y_test)
     print('\n테스트 정확도 : ', test_acc)
+
+
+    DICT[str(opt)+'_'+str(lr)+'_'+str(epc)] = test_acc
+
+
+
 
 
 optimizer = ['sgd', 'adam', 'rmsprop', 'adadelta','adagrad'] #xiver 있다던데
 loss = ['sparse_categorical_crossentropy'] #, 'mse', 'binary_crossentropy', 'categorical_crossentropy']  #'BinaryCrossentropy class', 'CategoricalCrossentropy class', 'SparseCategoricalCrossentropy class', 'Poisson class', 'binary_crossentropy function', 'categorical_crossentropy function', 'sparse_categorical_crossentropy function', 'poisson function', 'KLDivergence class', 'kl_divergence function'
 lr = [0.01]
-epc = [1, 5, 10]
+epc = [1, 2]
 
 for k in optimizer:
     for i in lr:
@@ -50,7 +58,7 @@ for k in optimizer:
         model.summary()
         ModelCompile(k, i)
         ModelFit(j)
-        PrintAccuracy()
+        PrintAccuracy(k, i, j)  #원래빈칸
 
 
         #아래 내용을 추가해주지 않으면 기존 모델 재활용되기에, 이상하게 꼬여서 초기화가 필요하다고 생각했음. 그래서 위 코드를 붙였더니 모델이 각자 다른게 생성되는 것을 확인 (이름(숫자) 다름)
@@ -59,3 +67,8 @@ for k in optimizer:
         x_test = x_test.reshape((10000, 28 * 28)) / 255.0
 
         model = tf.keras.models.Sequential()  # Sequential model
+
+print(DICT)  #잘 출력됨. {'sgd_0.01_1': 0.9067000150680542, 'adam_0.01_1': 0.9531000256538391, 'rmsprop_0.01_1': 0.8880000114440918, 'adadelta_0.01_1': 0.7645000219345093, 'adagrad_0.01_1': 0.9251999855041504}
+import operator
+SORT= sorted(DICT.items(), key=operator.itemgetter(1), reverse=True)
+print(SORT)
